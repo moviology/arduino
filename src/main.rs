@@ -1,27 +1,40 @@
 #![no_std]
 #![no_main]
 
+use arduino_hal as hal;
+use arduino_hal::prelude::*;
 use panic_halt as _;
+use ufmt::uwriteln;
+
+/// TODO: Fix Heart Rate Reading (not accurate)
 
 #[arduino_hal::entry]
 fn main() -> ! {
-    let dp = arduino_hal::Peripherals::take().unwrap();
-    let pins = arduino_hal::pins!(dp);
+   let dp = hal::Peripherals::take().unwrap();
+   let pins = hal::pins!(dp);
+   let mut serial = hal::default_serial!(dp, pins, 57600);
+   let mut adc = hal::Adc::new(dp.ADC, Default::default());
 
-    /*
-     * For examples (and inspiration), head to
-     *
-     *     https://github.com/Rahix/avr-hal/tree/main/examples
-     *
-     * NOTE: Not all examples were ported to all boards!  There is a good chance though, that code
-     * for a different board can be adapted for yours.  The Arduino Uno currently has the most
-     * examples available.
-     */
+   let a0 = pins.a0.into_analog_input(&mut adc);
+   let a1 = pins.a1.into_analog_input(&mut adc);
 
-    let mut led = pins.d13.into_output();
+   loop {
+      let mut gsr_sum = 0;
+      let mut hr_sum = 0;
 
-    loop {
-        led.toggle();
-        arduino_hal::delay_ms(1000);
-    }
+      for _ in 0..10 {
+         let gsr_value = a0.analog_read(&mut adc);
+         let hr_value = a1.analog_read(&mut adc);
+
+         gsr_sum += gsr_value;
+         hr_sum += hr_value;
+
+         hal::delay_ms(100);
+      }
+
+      let gsr_average = gsr_sum / 10;
+      let hr_average = hr_sum / 100;
+
+      uwriteln!(&mut serial, "{}, {}\r", gsr_average, hr_average).void_unwrap();
+   }
 }
