@@ -1,6 +1,6 @@
 [package]
 name = "arduino"
-version = "0.0.1"
+version = "0.1.0"
 authors = ["KevinSilvester <kevinsilvester05@gmail.com>"]
 edition = "2021"
 license = "MIT"
@@ -20,6 +20,10 @@ embedded-hal = "0.2.3"
 git = "https://github.com/rahix/avr-hal"
 rev = "1aacefb335517f85d0de858231e11055d9768cdf"
 features = ["arduino-uno"]
+
+[dependencies.avr-device]
+version = "0.3.4"
+features = ["atmega328p", "rt"]
 
 [profile.dev]
 panic = "abort"
